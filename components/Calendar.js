@@ -105,6 +105,20 @@ export default function ResourceCalendar() {
           console.log("args.source", args.source);
         },
       },
+      {
+        text: "Unlock...",
+        onClick: async (args) => {
+          const now = new Date();
+
+          const start = new Date(args.source.data.start);
+          const end = new Date(args.source.data.end);
+          console.log("start, now, end", start, now, end);
+          if (start < now && now < end) {
+            console.log("unlock");
+            //TODO: get to esp32
+          } else window.alert("cannot unlock");
+        },
+      },
     ],
   });
 
@@ -186,9 +200,17 @@ export default function ResourceCalendar() {
   };
 
   const onBeforeEventRender = (args) => {
+    console.log("args", args);
+    const start = new Date(args.data.start.value);
+    const end = new Date(args.data.end.value);
+    const now = new Date();
+    if (start < now && now < end) {
+      args.data.borderColor = "red";
+      args.data.text += " (unlockable)";
+    } else args.data.borderColor = "darker";
+
     const color = (args.data.tags && args.data.tags.color) || "#3d85c6";
     args.data.backColor = color + "cc";
-    args.data.borderColor = "darker";
 
     const progress = args.data.tags?.progress || 0;
 
