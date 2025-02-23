@@ -128,10 +128,12 @@ export default function ResourceCalendar() {
       {
         text: "Unlock...",
         onClick: async (args) => {
-          if (args.source.data.idUser !== user?._id) {
-            showAlert("You can't unlock other user's events", "error");
-            return;
-          }
+          
+          // if (args.source.data.idUser !== user?._id) {
+          //   showAlert("You can't unlock other user's events", "error");
+          //   return;
+          // }
+
           const now = new Date();
 
           const start = new Date(args.source.data.start);
