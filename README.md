@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ESP32/ESP8266 HTTP/HTTPS Server Implementation
 
-## Getting Started
+This project implements a dual HTTP/HTTPS server on an ESP32/ESP8266 microcontroller using MicroPython. The server provides a web interface to control a door lock mechanism with support for both secure and non-secure connections.
 
-First, run the development server:
+## Buffer Size Configuration
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+The server uses different buffer sizes for HTTP and HTTPS connections:
+
+```python
+# Configuration
+HTTP_BUFFER_SIZE = 1024     # Standard buffer for HTTP
+HTTPS_BUFFER_SIZE = 4096    # Larger buffer for HTTPS to handle SSL overhead
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Why Different Buffer Sizes?
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+1. **HTTP (1024 bytes)**:
+   - Sufficient for basic HTTP requests
+   - Most HTTP requests are relatively small
+   - Headers are typically minimal
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. **HTTPS (4096 bytes)**:
+   - Larger buffer needed due to SSL/TLS overhead
+   - Additional security-related headers
+   - Client certificates and encryption information
+   - Modern browsers send more extensive headers
 
-## Learn More
+### Buffer Usage
 
-To learn more about Next.js, take a look at the following resources:
+```python
+def handle_connection(conn, client_ip, protocol="HTTP"):
+    # Use larger buffer for HTTPS
+    buffer_size = HTTPS_BUFFER_SIZE if protocol == "HTTPS" else HTTP_BUFFER_SIZE
+    raw_request = conn.recv(buffer_size)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The server automatically selects the appropriate buffer size based on the protocol being used.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Request Size Monitoring
 
-## Deploy on Vercel
+The server logs the actual request size to help monitor buffer usage:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+==================================================
+HTTPS Request from 192.168.1.100
+==================================================
+Request size: 2048 bytes
+==================================================
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This helps in adjusting buffer sizes if needed.
+
+## Request Decoding
+
+When the request is received:
+1. The appropriate buffer size is used to receive the raw bytes
+2. The byte array is decoded using UTF-8 encoding
+3. The decoded content is parsed and displayed
+4. Request size is logged for monitoring
+
+```python
+# Decode the byte array using UTF-8
+decoded_request = raw_request.decode('utf-8')
+
+# Split and process the request
+lines = decoded_request.split('\r\n')
+```
+
+## Port Configuration
+
+[Rest of the previous README content about ports remains the same...]
+
+## Security Considerations
+
+1. **Buffer Sizes**:
+   - Insufficient buffer size can truncate HTTPS requests
+   - Too large buffers may impact memory usage
+   - Monitor request sizes to optimize buffer configuration
+
+2. **Memory Usage**:
+   - HTTPS connections require more memory
+   - Consider available RAM when setting buffer sizes
+   - Monitor memory usage on your specific device
+
+3. **SSL/TLS Overhead**:
+   - HTTPS adds encryption overhead
+   - Headers are typically larger due to security information
+   - Client certificates may increase request size
+
+## Important Notes
+
+- Adjust buffer sizes based on your specific needs
+- Monitor request sizes in the console output
+- Consider memory constraints of your device
+- Balance between buffer size and memory usage
