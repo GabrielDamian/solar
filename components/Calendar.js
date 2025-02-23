@@ -144,8 +144,6 @@ export default function ResourceCalendar() {
             //TODO: get to esp32
             try {
               const esp_url = process.env.NEXT_PUBLIC_ESP;
-              console.log("Esp_url:", esp_url);
-
               const resp = await axios.get(esp_url);
               console.log("resp", resp);
             } catch (error) {
