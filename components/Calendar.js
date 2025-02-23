@@ -143,7 +143,7 @@ export default function ResourceCalendar() {
             console.log("unlock");
             //TODO: get to esp32
             try {
-              const resp = await axios.get("/api/esp");
+              const resp = await axios.get("http://100.103.138.223:5000/?door=unlock");
               console.log("resp", resp);
             } catch (error) {
               console.log("error", error);
