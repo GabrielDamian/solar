@@ -40,57 +40,52 @@ export default function ResourceCalendar() {
     },
     main: {
       flexGrow: "1",
+      width: "100%",
+    },
+    toolbar: {
+      display: "flex",
+      justifyContent: "space-between",
+      marginBottom: "10px",
+    },
+    button: {
+      padding: "10px 20px",
+      border: "none",
+      borderRadius: "5px",
+      backgroundColor: "#007bff",
+      color: "#fff",
+      cursor: "pointer",
+      transition: "background-color 0.3s",
+    },
+    buttonLight: {
+      backgroundColor: "#6c757d",
+    },
+    buttonHover: {
+      backgroundColor: "#0056b3",
+    },
+    legend: {
+      display: "flex",
+      justifyContent: "center",
+      marginBottom: "10px",
+    },
+    legendItem: {
+      display: "flex",
+      alignItems: "center",
+      marginRight: "10px",
+    },
+    legendColor: {
+      width: "20px",
+      height: "20px",
+      borderRadius: "50%",
+      marginRight: "5px",
     },
   };
 
-  const colors = [
-    { name: "Dark Green", id: "#228B22" },
-    { name: "Green", id: "#6aa84f" },
-    { name: "Yellow", id: "#f1c232" },
-    { name: "Orange", id: "#e69138" },
-    { name: "Crimson", id: "#DC143C" },
-    { name: "Light Coral", id: "#F08080" },
-    { name: "Purple", id: "#9370DB" },
-    { name: "Turquoise", id: "#40E0D0" },
-    { name: "Light Blue", id: "#ADD8E6" },
-    { name: "Sky Blue", id: "#87CEEB" },
-    { name: "Blue", id: "#3d85c6" },
-  ];
-
-  const progressValues = [
-    { name: "0%", id: 0 },
-    { name: "10%", id: 10 },
-    { name: "20%", id: 20 },
-    { name: "30%", id: 30 },
-    { name: "40%", id: 40 },
-    { name: "50%", id: 50 },
-    { name: "60%", id: 60 },
-    { name: "70%", id: 70 },
-    { name: "80%", id: 80 },
-    { name: "90%", id: 90 },
-    { name: "100%", id: 100 },
-  ];
-
   const editEvent = async (e) => {
     if (e.data.idUser !== user?._id) {
-      showAlert("You can't edit other user's events", "error");
+      showAlert("You can't edit other user's reservations", "error");
       return;
     }
-    const form = [
-      { name: "Event text", id: "text", type: "text" },
-      {
-        name: "Event color",
-        id: "tags.color",
-        type: "select",
-        options: colors,
-      },
-      {
-        name: "Progress",
-        id: "tags.progress",
-        type: "select",
-        options: progressValues,
-      },
-    ];
+    const form = [{ name: "Event text", id: "text", type: "text" }];
 
     const modal = await DayPilot.Modal.form(form, e.data);
     if (modal.canceled) {
@@ -109,7 +104,7 @@ export default function ResourceCalendar() {
         text: "Delete",
         onClick: async (args) => {
           if (args.source.data.idUser !== user?._id) {
-            showAlert("You can't delete other user's events", "error");
+            showAlert("You can't delete other user's reservations", "error");
             return;
           }
           calendar?.events.remove(args.source);
@@ -128,12 +123,10 @@ export default function ResourceCalendar() {
       {
         text: "Unlock...",
         onClick: async (args) => {
-          
-          // if (args.source.data.idUser !== user?._id) {
-          //   showAlert("You can't unlock other user's events", "error");
-          //   return;
-          // }
-
+          if (args.source.data.idUser !== user?._id) {
+            showAlert("You can't unlock other user's reservations", "error");
+            return;
+          }
           const now = new Date();
 
           const start = new Date(args.source.data.start);
@@ -146,10 +139,14 @@ export default function ResourceCalendar() {
               const esp_url = process.env.NEXT_PUBLIC_ESP;
               const resp = await axios.get(esp_url);
               console.log("resp", resp);
+              if (resp.status === "200") {
+                showAlert("Unlocked successfully!", "success");
+              }
             } catch (error) {
               console.log("error", error);
             }
-          } else showAlert("cannot unlock", "warning");
+          } else
+            showAlert("You're outside of the reservation time!", "warning");
         },
       },
     ],
@@ -170,61 +167,6 @@ export default function ResourceCalendar() {
         backColor: "#00000033",
         fontColor: "#ffffff",
         padding: 2,
-        // menu: new DayPilot.Menu({
-        //   onShow: async (args) => {
-        //     const column = columns.find((c) => c.id === args.source.id);
-        //     const items = args.menu.items || [];
-        //     if (column?.blocked) {
-        //       items[0].text = "Unblock";
-        //     } else {
-        //       items[0].text = "Block";
-        //     }
-        //   },
-        //   items: [
-        //     {
-        //       text: "Block",
-        //       onClick: async (args) => {
-        //         const updatedColumns = columns.map((c) =>
-        //           c.id === args.source.id ? { ...c, blocked: !c.blocked } : c
-        //         );
-        //         setColumns(updatedColumns);
-        //       },
-        //     },
-        //     {
-        //       text: "Edit",
-        //       onClick: async (args) => {
-        //         const column = columns.find((c) => c.id === args.source.id);
-        //         if (!column) {
-        //           return;
-        //         }
-        //         const modal = await DayPilot.Modal.prompt(
-        //           "Edit column name:",
-        //           column.name
-        //         );
-        //         if (modal.canceled) {
-        //           return;
-        //         }
-        //         if (e.data.idUser !== user?._id) {
-        //           showAlert("You can't edit this event", "error");
-        //           return;
-        //         }
-        //         const updatedColumns = columns.map((c) =>
-        //           c.id === args.source.id ? { ...c, name: modal.result } : c
-        //         );
-        //         setColumns(updatedColumns);
-        //       },
-        //     },
-        //     {
-        //       text: "Delete",
-        //       onClick: async (args) => {
-        //         const updatedColumns = columns.filter(
-        //           (c) => c.id !== args.source.id
-        //         );
-        //         setColumns(updatedColumns);
-        //       },
-        //     },
-        //   ],
-        // }),
       },
     ];
   };
@@ -237,16 +179,24 @@ export default function ResourceCalendar() {
   };
 
   const onBeforeEventRender = (args) => {
-    console.log("args", args);
     const start = new Date(args.data.start.value);
     const end = new Date(args.data.end.value);
     const now = new Date();
-    if (start < now && now < end) {
-      args.data.borderColor = "red";
+    if (args.data.idUser === user?._id && start < now && now < end) {
+      args.data.tags = args.data.tags || {};
+      args.data.tags.color = "#006400";
       args.data.text += " (unlockable)";
-    } else args.data.borderColor = "darker";
 
-    const color = (args.data.tags && args.data.tags.color) || "#3d85c6";
+      // Calculate progress
+      const totalDuration = end - start;
+      const elapsedDuration = now - start;
+      const progress1 = Math.min((elapsedDuration / totalDuration) * 100, 100);
+      args.data.tags.progress = Math.trunc(progress1);
+    } else {
+      args.data.borderColor = "darker";
+    }
+    const colorUser = args.data.idUser === user?._id ? "#3d85c6" : "#808080";
+    const color = (args.data.tags && args.data.tags.color) || colorUser;
     args.data.backColor = color + "cc";
 
     const progress = args.data.tags?.progress || 0;
@@ -274,25 +224,6 @@ export default function ResourceCalendar() {
         fontColor: "#000",
         backColor: "#ffffff33",
         style: "text-align: center; line-height: 20px;",
-      },
-      {
-        id: "progress-background",
-        bottom: 10,
-        left: 10,
-        right: 10,
-        height: 10,
-        borderRadius: "5px",
-        backColor: "#ffffff33",
-        toolTip: "Progress: " + progress + "%",
-      },
-      {
-        id: "progress-bar",
-        bottom: 10,
-        left: 10,
-        width: `calc((100% - 20px) * ${progress / 100})`,
-        height: 10,
-        borderRadius: "5px",
-        backColor: color,
       },
       {
         id: "menu",
@@ -375,7 +306,10 @@ export default function ResourceCalendar() {
       return;
     }
 
-    const modal = await DayPilot.Modal.prompt("Create a new event:", "Event 1");
+    const modal = await DayPilot.Modal.prompt(
+      "Create a new reservation:",
+      "Reservation 1"
+    );
     calendar?.clearSelection();
     if (modal.canceled) {
       return;
@@ -384,6 +318,7 @@ export default function ResourceCalendar() {
       start: args.start,
       end: args.end,
       id: DayPilot.guid(),
+      idUser: user?._id,
       text: modal.result,
       resource: args.resource,
       tags: {},
@@ -400,53 +335,104 @@ export default function ResourceCalendar() {
   };
 
   const onEventMove = async (args) => {
+    if (user?._id !== args.e.data.idUser) {
+      showAlert("You can't move other user's reservations", "error");
+      args.preventDefault();
+      return;
+    }
+
     const column = columns.find((c) => c.id === args.newResource);
     if (column?.blocked) {
       args.preventDefault();
     }
   };
 
+  const onEventResize = async (args) => {
+    if (user?._id !== args.e.data.idUser) {
+      showAlert("You can't resize other user's reservations", "error");
+      args.preventDefault();
+      return;
+    }
+
+    const column = columns.find((c) => c.id === args.resource);
+    if (column?.blocked) {
+      args.preventDefault();
+      return;
+    }
+
+    const updatedEvent = {
+      start: args.newStart,
+      end: args.newEnd,
+    };
+
+    calendar?.events.update(updatedEvent);
+    await saveEditEvent(args.e.data._id, updatedEvent);
+  };
+
   return (
-    <div style={styles.wrap}>
-      <div style={styles.left}>
-        <DayPilotNavigator
-          selectMode={"Day"}
-          showMonths={3}
-          skipMonths={3}
-          onTimeRangeSelected={(args) => setStartDate(args.start)}
-          controlRef={setDatePicker}
-        />
-      </div>
-      <div style={styles.main}>
-        <div className={"toolbar"}>
-          <button onClick={onPreviousClick} className={"btn-light"}>
-            Previous
-          </button>
-          <button onClick={onTodayClick}>Today</button>
-          <button onClick={onNextClick} className={"btn-light"}>
-            Next
-          </button>
+    <>
+      <div style={styles.legend}>
+        <div style={styles.legendItem}>
+          <div
+            style={{ ...styles.legendColor, backgroundColor: "#3d85c6" }}
+          ></div>
+          <span>Your Reservations</span>
         </div>
-        <DayPilotCalendar
-          viewType={"Resources"}
-          columns={columns}
-          startDate={startDate}
-          events={events}
-          eventBorderRadius={"5px"}
-          headerHeight={50}
-          durationBarVisible={false}
-          onTimeRangeSelected={onTimeRangeSelected}
-          onEventClick={async (args) => {
-            await editEvent(args.e);
-          }}
-          contextMenu={contextMenu}
-          onBeforeHeaderRender={onBeforeHeaderRender}
-          onBeforeEventRender={onBeforeEventRender}
-          onBeforeCellRender={onBeforeCellRender}
-          onEventMove={onEventMove}
-          controlRef={setCalendar}
-        />
+        <div style={styles.legendItem}>
+          <div
+            style={{ ...styles.legendColor, backgroundColor: "#808080" }}
+          ></div>
+          <span>Other Reservations</span>
+        </div>
+        <div style={styles.legendItem}>
+          <div
+            style={{ ...styles.legendColor, backgroundColor: "#006400" }}
+          ></div>
+          <span>Unlockable</span>
+        </div>
       </div>
-    </div>
+      <div style={styles.wrap}>
+        <div style={styles.left}>
+          <DayPilotNavigator
+            selectMode={"Day"}
+            showMonths={3}
+            skipMonths={3}
+            onTimeRangeSelected={(args) => setStartDate(args.start)}
+            controlRef={setDatePicker}
+          />
+        </div>
+        <div style={styles.main}>
+          <div className={"toolbar"}>
+            <button onClick={onPreviousClick} className={"btn-light"}>
+              Previous
+            </button>
+            <button onClick={onTodayClick}>Today</button>
+            <button onClick={onNextClick} className={"btn-light"}>
+              Next
+            </button>
+          </div>
+          <DayPilotCalendar
+            viewType={"Resources"}
+            columns={columns}
+            startDate={startDate}
+            events={events}
+            eventBorderRadius={"5px"}
+            headerHeight={50}
+            durationBarVisible={false}
+            onTimeRangeSelected={onTimeRangeSelected}
+            onEventClick={async (args) => {
+              await editEvent(args.e);
+            }}
+            contextMenu={contextMenu}
+            onBeforeHeaderRender={onBeforeHeaderRender}
+            onBeforeEventRender={onBeforeEventRender}
+            onBeforeCellRender={onBeforeCellRender}
+            onEventMove={onEventMove}
+            onEventResize={onEventResize}
+            controlRef={setCalendar}
+          />
+        </div>
+      </div>
+    </>
   );
 }
