@@ -8,14 +8,27 @@ import {
   DayPilotCalendar,
   DayPilotNavigator,
 } from "@daypilot/daypilot-lite-react";
+import { useAlert } from "../contexts/AlertContext";
 
 export default function ResourceCalendar() {
+  const { showAlert } = useAlert();
+
   const [calendar, setCalendar] = useState();
   const [datePicker, setDatePicker] = useState();
 
   const [events, setEvents] = useState([]);
   const [columns, setColumns] = useState([]);
-  const [startDate, setStartDate] = useState("2025-11-04");
+
+  const getCurrentDateFormatted = () => {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const now = getCurrentDateFormatted();
+  const [startDate, setStartDate] = useState(now);
   const { user } = useAuth();
 
   const styles = {
@@ -59,6 +72,10 @@ export default function ResourceCalendar() {
   ];
 
   const editEvent = async (e) => {
+    if (e.data.idUser !== user?._id) {
+      showAlert("You can't edit other user's events", "error");
+      return;
+    }
     const form = [
       { name: "Event text", id: "text", type: "text" },
       {
@@ -91,6 +108,10 @@ export default function ResourceCalendar() {
       {
         text: "Delete",
         onClick: async (args) => {
+          if (args.source.data.idUser !== user?._id) {
+            showAlert("You can't delete other user's events", "error");
+            return;
+          }
           calendar?.events.remove(args.source);
           deleteEvent(args.source.data._id);
         },
@@ -102,7 +123,6 @@ export default function ResourceCalendar() {
         text: "Edit...",
         onClick: async (args) => {
           await editEvent(args.source);
-          console.log("args.source", args.source);
         },
       },
       {
@@ -116,7 +136,15 @@ export default function ResourceCalendar() {
           if (start < now && now < end) {
             console.log("unlock");
             //TODO: get to esp32
-          } else window.alert("cannot unlock");
+            try {
+              const resp = await axios.get(
+                process.env.NEXT_PUBLIC_ESP32
+              );
+              console.log("resp", resp);
+            } catch (error) {
+              console.log("error", error);
+            }
+          } else showAlert("cannot unlock", "warning");
         },
       },
     ],
@@ -169,6 +197,10 @@ export default function ResourceCalendar() {
                   column.name
                 );
                 if (modal.canceled) {
+                  return;
+                }
+                if (e.data.idUser !== user?._id) {
+                  showAlert("You can't edit this event", "error");
                   return;
                 }
                 const updatedColumns = columns.map((c) =>
@@ -288,6 +320,7 @@ export default function ResourceCalendar() {
     const next = new DayPilot.Date(startDate).addDays(1);
     datePicker?.select(next);
   };
+
   const loadData = async () => {
     try {
       if (!calendar || calendar.disposed()) {
@@ -304,17 +337,18 @@ export default function ResourceCalendar() {
       const eventsData = await axios.get("/api/event");
       if (eventsData.data.events) setEvents(eventsData.data.events);
 
-      datePicker?.select("2025-11-04");
+      const now = getCurrentDateFormatted();
+      datePicker?.select(now);
     } catch (e) {
       console.log("err", e);
     }
   };
+
   useEffect(() => {
     loadData();
   }, [calendar, datePicker]);
 
   const saveEvent = async (event) => {
-    console.log("event", event);
     const eventData = await axios.post("/api/event", { event });
     return eventData;
   };
