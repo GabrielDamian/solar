@@ -1,15 +1,10 @@
 import Sidebar from "../components/Sidebar";
 import { AlertProvider } from "../contexts/AlertContext";
 import { AuthProvider } from "../contexts/AuthContext";
-import Head from 'next/head';
 
 function MyApp({ Component, pageProps }) {
   return (
-    <>
-      <Head>
-        <meta httpEquiv="Content-Security-Policy" content="upgrade-insecure-requests" />
-      </Head>
-      <AlertProvider>
+    <AlertProvider>
       <AuthProvider>
         <div style={{ display: "flex", height: "100vh" }}>
           {/* Sidebar Menu */}
@@ -21,8 +16,6 @@ function MyApp({ Component, pageProps }) {
         </div>
       </AuthProvider>
     </AlertProvider>
-    </>
-   
   );
 }
 

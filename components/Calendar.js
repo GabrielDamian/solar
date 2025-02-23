@@ -128,6 +128,10 @@ export default function ResourceCalendar() {
       {
         text: "Unlock...",
         onClick: async (args) => {
+          if (args.source.data.idUser !== user?._id) {
+            showAlert("You can't unlock other user's events", "error");
+            return;
+          }
           const now = new Date();
 
           const start = new Date(args.source.data.start);
@@ -137,9 +141,7 @@ export default function ResourceCalendar() {
             console.log("unlock");
             //TODO: get to esp32
             try {
-              const resp = await axios.get(
-                process.env.NEXT_PUBLIC_ESP32
-              );
+              const resp = await axios.get("/api/esp");
               console.log("resp", resp);
             } catch (error) {
               console.log("error", error);
@@ -165,61 +167,61 @@ export default function ResourceCalendar() {
         backColor: "#00000033",
         fontColor: "#ffffff",
         padding: 2,
-        menu: new DayPilot.Menu({
-          onShow: async (args) => {
-            const column = columns.find((c) => c.id === args.source.id);
-            const items = args.menu.items || [];
-            if (column?.blocked) {
-              items[0].text = "Unblock";
-            } else {
-              items[0].text = "Block";
-            }
-          },
-          items: [
-            {
-              text: "Block",
-              onClick: async (args) => {
-                const updatedColumns = columns.map((c) =>
-                  c.id === args.source.id ? { ...c, blocked: !c.blocked } : c
-                );
-                setColumns(updatedColumns);
-              },
-            },
-            {
-              text: "Edit",
-              onClick: async (args) => {
-                const column = columns.find((c) => c.id === args.source.id);
-                if (!column) {
-                  return;
-                }
-                const modal = await DayPilot.Modal.prompt(
-                  "Edit column name:",
-                  column.name
-                );
-                if (modal.canceled) {
-                  return;
-                }
-                if (e.data.idUser !== user?._id) {
-                  showAlert("You can't edit this event", "error");
-                  return;
-                }
-                const updatedColumns = columns.map((c) =>
-                  c.id === args.source.id ? { ...c, name: modal.result } : c
-                );
-                setColumns(updatedColumns);
-              },
-            },
-            {
-              text: "Delete",
-              onClick: async (args) => {
-                const updatedColumns = columns.filter(
-                  (c) => c.id !== args.source.id
-                );
-                setColumns(updatedColumns);
-              },
-            },
-          ],
-        }),
+        // menu: new DayPilot.Menu({
+        //   onShow: async (args) => {
+        //     const column = columns.find((c) => c.id === args.source.id);
+        //     const items = args.menu.items || [];
+        //     if (column?.blocked) {
+        //       items[0].text = "Unblock";
+        //     } else {
+        //       items[0].text = "Block";
+        //     }
+        //   },
+        //   items: [
+        //     {
+        //       text: "Block",
+        //       onClick: async (args) => {
+        //         const updatedColumns = columns.map((c) =>
+        //           c.id === args.source.id ? { ...c, blocked: !c.blocked } : c
+        //         );
+        //         setColumns(updatedColumns);
+        //       },
+        //     },
+        //     {
+        //       text: "Edit",
+        //       onClick: async (args) => {
+        //         const column = columns.find((c) => c.id === args.source.id);
+        //         if (!column) {
+        //           return;
+        //         }
+        //         const modal = await DayPilot.Modal.prompt(
+        //           "Edit column name:",
+        //           column.name
+        //         );
+        //         if (modal.canceled) {
+        //           return;
+        //         }
+        //         if (e.data.idUser !== user?._id) {
+        //           showAlert("You can't edit this event", "error");
+        //           return;
+        //         }
+        //         const updatedColumns = columns.map((c) =>
+        //           c.id === args.source.id ? { ...c, name: modal.result } : c
+        //         );
+        //         setColumns(updatedColumns);
+        //       },
+        //     },
+        //     {
+        //       text: "Delete",
+        //       onClick: async (args) => {
+        //         const updatedColumns = columns.filter(
+        //           (c) => c.id !== args.source.id
+        //         );
+        //         setColumns(updatedColumns);
+        //       },
+        //     },
+        //   ],
+        // }),
       },
     ];
   };
