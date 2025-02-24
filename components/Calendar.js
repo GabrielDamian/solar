@@ -123,6 +123,14 @@ export default function ResourceCalendar() {
       {
         text: "Unlock...",
         onClick: async (args) => {
+          console.log("args", args);
+          const idx = parseInt(args.source.data.resource.replace("R", ""));
+          let targetESP =
+            idx % 2 !== 0
+              ? process.env.NEXT_PUBLIC_ESP1
+              : process.env.NEXT_PUBLIC_ESP2;
+          const target = targetESP.replace("?door=unlock", "");
+
           if (args.source.data.idUser !== user?._id) {
             showAlert("You can't unlock other user's reservations", "error");
             return;
@@ -136,14 +144,16 @@ export default function ResourceCalendar() {
             console.log("unlock");
             //TODO: get to esp32
             try {
-              const esp_url = process.env.NEXT_PUBLIC_ESP;
-              const resp = await axios.get(esp_url);
-              console.log("resp", resp);
-              if (resp.status === "200") {
-                showAlert("Unlocked successfully!", "success");
-              }
+              const resp = await axios.get(targetESP);
+              console.log("resp", resp.status);
+
+              if (resp.status == 200) {
+                showAlert("Unlock successful on " + target + "!", "success");
+              } else showAlert("Unlock failed on " + target + "!", "error");
             } catch (error) {
-              console.log("error", error);
+              console.log("error1", error);
+
+              showAlert("Unlock failed on " + target + "!", "error");
             }
           } else
             showAlert("You're outside of the reservation time!", "warning");
